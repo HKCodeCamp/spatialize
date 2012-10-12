@@ -4,6 +4,7 @@
 	"notes":"Taken from http://archinect.com/people/project/39696910/mgm-studios-data-center/39796798",
 	"sensors":[
 		{
+			"id":"1",
 			"imgurl":"sensoricon.fw.png",
 			"name":"sensor1",
 			"parameter":"wifisensortype",
@@ -12,6 +13,7 @@
 			"notes":""
 		},
 		{
+			"id":"2",
 			"imgurl":"sensoricon.fw.png",
 			"name":"sensor2",
 			"parameter":"wifisensortype",
@@ -20,6 +22,7 @@
 			"notes":""
 		},
 		{
+			"id":"3",
 			"imgurl":"sensoricon.fw.png",
 			"name":"sensor3",
 			"parameter":"wifisensortype",
@@ -28,6 +31,7 @@
 			"notes":""
 		},
 		{
+			"id":"4",
 			"imgurl":"sensoricon.fw.png",
 			"name":"sensor4",
 			"parameter":"wifisensortype",
@@ -36,6 +40,7 @@
 			"notes":""
 		},
 		{
+			"id":"5",
 			"imgurl":"sensoricon.fw.png",
 			"name":"sensor5",
 			"parameter":"wifisensortype",
@@ -44,6 +49,7 @@
 			"notes":""
 		},
 		{
+			"id":"6",
 			"imgurl":"sensoricon.fw.png",
 			"name":"sensor6",
 			"parameter":"wifisensortype",
