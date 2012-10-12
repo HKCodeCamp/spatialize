@@ -187,6 +187,7 @@
 		self.$overlay.css({ backgroundColor : record.color || '', width:self.$icon.width(), height:self.$icon.height(), opacity:0.4 });
 		if (self.$balloon) {
 			self.$balloon.html(record.notes);
+			this.$balloon.css({ position:'absolute', top:-this.$balloon.outerHeight() - 25, left:-this.$balloon.outerWidth()/2-25, minWidth:180 });
 		}
 	};
 	MapItem.prototype.destroy = function() {
