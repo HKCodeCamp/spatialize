@@ -6,7 +6,7 @@ import org.springframework.core.io.ClassPathResource;
 
 @Configuration
 @ComponentScan(basePackages = { "com.spatialize.domain" })
-@Import({ PersistenceConfig.class, SecurityConfig.class })
+@Import({ PersistenceConfig.class, SecurityConfig.class, ServicesConfig.class })
 public class RootConfig {
 	
 	@Bean
