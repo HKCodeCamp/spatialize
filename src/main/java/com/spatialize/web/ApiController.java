@@ -8,6 +8,8 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -20,6 +22,8 @@ import com.spatialize.io.DeviceServices;
 @RequestMapping("/api")
 @Controller
 public class ApiController {
+	
+	private static final Logger log = LoggerFactory.getLogger(ApiController.class);
 	
 	@Resource
 	private DeviceServices deviceSvc;
@@ -45,21 +49,27 @@ public class ApiController {
 			
 			d.imgurl = "/spatialize/resources/images";
 			
-			if (tag.attributes.containsKey("humidity")) {
+			if (hasAttribute(tag, "humidity")) {
 				d.imgurl += "/temperature-humidity-symbol.png";
 				
-			} else if (tag.attributes.containsKey("temp")) {
+			} else if (hasAttribute(tag, "temp")) {
 				d.imgurl += "/temperature-symbol.png";
-			} else if (tag.attributes.containsKey("door")) {
+				
+			} else if (hasAttribute(tag, "dooropen")) {
 				d.imgurl += "/door-symbol.png";
 				
-			} else if (tag.attributes.containsKey("fluid")
-					&& "null".equalsIgnoreCase((String) tag.attributes
-							.get("fluid")) == false) {
+				boolean doorOpen = Boolean.valueOf((String)tag.attributes.get("dooropen"));
+				if (doorOpen)
+					d.color = "red";
+				else
+					d.color = "green";
+				
+			} else if (hasAttribute(tag, "fluid")) {
 				d.imgurl += "/fluid-symbol.png";
-
+				
 			} else {
-				d.imgurl += "/unknown.png";
+				//d.imgurl += "/unknown.png";
+				continue;
 			}
 			d.name = tag.id;
 			d.notes = "";
@@ -68,5 +78,10 @@ public class ApiController {
 			deviceList.add(d);
 		}
 		return deviceList;
+	}
+	
+	private boolean hasAttribute(Tag tag, String attr) {
+		return tag.attributes.containsKey(attr)
+				&& tag.attributes.get(attr) != null;
 	}
 }
