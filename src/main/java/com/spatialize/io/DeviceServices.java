@@ -21,6 +21,11 @@ public class DeviceServices {
 			tagIds.add(t.id);
 		}
 		resp = zmservice.tagPrint(tagIds.toArray(new String[0]));
-		return resp.tags.values();
+		if (resp == null) {
+		
+			return new ArrayList<Tag>();
+		} else {
+			return resp.tags.values();
+		}
 	}
 }
