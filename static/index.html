@@ -118,13 +118,15 @@
 			dragstart : function(o) {
 				start = Point.fromCss(self.$item.position());
 				self.$item.appendTo('body');
+				app.detachMapItem(recordId);
 			},
 			dragmove : function(o) {
 				current = start.add(o.dragVector);
 				self.$item.css({ left:o.currentPosition.x, top:o.currentPosition.y });
 			},
 			dragend : function(o) {
-				app.dropMapItemOntoScreen(recordId, o.releasePosition);
+				app.dropListItemOntoScreen(recordId, o.releasePosition);
+				self.destroy();
 			}
 		});
 	};
@@ -175,7 +177,8 @@
 		this.$item.find('.icon_image').attr('src', record.imgurl);
 	}
 	
-	var App = function() {
+	var App = function(url) {
+		this.url = url;
 		this.data = null;
 		this.$viewport = $('#viewport');
 		this.$mapcontainer = $('#mapcontainer');
@@ -194,6 +197,7 @@
 		setInterval(function() {
 			self.load();
 		}, 3000);
+		self.load();
 	};
 	// UI
 	App.prototype.initCommandBar = function() {
@@ -226,19 +230,11 @@
 	App.prototype.toggleSensorList = function() {
 		this.$sensorlist.toggle();
 	};
-	App.prototype.dropMapItemOntoScreen = function(recordId, position) {
-		// If release outside of map or release over listitem, then remove, otherwise re-add
+	App.prototype.detachMapItem = function(recordId) {
 		var self = this;
-		if (self.__hittestOnMap(position)) {
-			self.mappedItems[recordId].destroy();
-			delete self.mappedItems[recordId];
-			self.listedItems[recordId].setDraggingEnabled(true);
-		} else {
-			var localPoint = self.globalToLocal(position);
-			self.mappedItems[recordId].appendTo(self.$mapcontainer).css({ left:localPoint.x, top:localPoint.y });
-			self.setRecordXY(recordId, localPoint.x, localPoint.y);
-		}
-	}
+		delete self.mappedItems[recordId];
+		self.listedItems[recordId].setDraggingEnabled(true);
+	};
 	App.prototype.__hittestOnMap = function(position) {
 		var self = this;
 		return self.__hittest(position, self.$sensorlist) == true || self.__hittest(position, self.$viewport) == false;
@@ -283,7 +279,7 @@
 	App.prototype.load = function(continuation) {
 		var self = this;
 		$.ajax({
-			url : '/spatialize/api/floorplan.json',
+			url : self.url,
 			type : 'GET',
 			dataType : 'json',
 			data : {},
@@ -304,20 +300,21 @@
 		var self = this;
 		self.$status.text('Saving...').fadeIn();
 		$.ajax({
-			url : '/spatialize/api/floorplan.json',
+			url : self.url,
 			type : 'POST',
 			dataType : 'json',
 			data : {jsonstring:JSON.stringify(this.data)},
 			success : function(responseData, textStatus, xhr) {
 				continuation && continuation(responseData);
 				self.$status.text('Saved');
-				console.log('saved', responseData);
 				setTimeout(function() { self.$status.fadeOut(); }, 300);
 			}
 		});
 	};
 	$(window).load(function() {
-		var app = new App();
+		var url = '/spatialize/api/floorplan.json';
+		var url = 'floorplan.json';
+		var app = new App(url);
 	});
 	</script>
 </head>
