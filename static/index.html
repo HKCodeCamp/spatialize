@@ -6,6 +6,15 @@
 	</style>
 	<script src='jquery-1.8.2.min.js'></script>
 	<script>
+	/*
+	Todo:
+		(DONE) icons have uid property
+		(DONE) disable list item when instantiated
+		(DONE) delete by dragging outside or onto sensor list
+		(DONE) prevent dragging from list onto map offscreen
+		tap to show balloon
+		multi-touch event handling
+	*/
 	var Point = function(x,y,z) {
 		this.x = x; this.y = y; this.z = z == undefined ? 0 : z;
 	}
@@ -52,7 +61,6 @@
 		});
 	}
 	
-	// Todo: multi-touch event handling
 	var MouseDragging = function($element, delegate) {
 		this.delegate = delegate;
 		this.isDragging = false;
@@ -60,10 +68,12 @@
 		this.currentPosition = new Point(0,0);
 		this.releasePosition = new Point(0,0);
 		this.dragVector = new Point(0,0);
+		this.canDrag = true;
 		$element.bind('mousedown', $.proxy(this.mousedown, this));
 		$element.disableSelection();
 	}
 	MouseDragging.prototype.mousedown = function(e) {
+		if (this.canDrag == false) { return; }
 		this.pressPosition = Point.fromEvent(e);
 		$(document).bind('mousemove', $.proxy(this.mousemove, this));
 		$(document).one('mouseup', $.proxy(this.mouseup, this));
@@ -93,8 +103,79 @@
 	MouseDragging.prototype.send = function(msg) {
 		(this.delegate[msg] && this.delegate[msg](this));
 	}
+	MouseDragging.prototype.setEnabled = function(canDrag) {
+		this.canDrag = canDrag;
+	}
 	
-	var FloorModel = function() {
+	var MapItem = function(recordId, $container, app) {
+		var self = this;
+		self.$item = $("<div style='position:absolute;'></div>").appendTo($container);
+		self.$icon = $("<img style='position:absolute;'/>").appendTo(self.$item);
+		self.$overlay = $("<div style='position:absolute; width:100%; height:100%;'></div>").appendTo(self.$item);
+		var start;
+		var current;
+		var dragging = new MouseDragging(self.$overlay, {
+			dragstart : function(o) {
+				start = Point.fromCss(self.$item.position());
+				self.$item.appendTo('body');
+			},
+			dragmove : function(o) {
+				current = start.add(o.dragVector);
+				self.$item.css({ left:o.currentPosition.x, top:o.currentPosition.y });
+			},
+			dragend : function(o) {
+				app.dropMapItemOntoScreen(recordId, o.releasePosition);
+			}
+		});
+	};
+	MapItem.prototype.toggleBalloon = function() {
+		
+	}
+	MapItem.prototype.refreshFromRecord = function(record) {
+		var self = this;
+		self.$icon.attr('src', record.imgurl);
+		self.$item.css({ 
+			left:record.x, top:record.y,
+			width:self.$icon.width(), height:self.$icon.height(), 
+			marginLeft:-self.$icon.width()/2, marginTop:-self.$icon.height()/2
+		});
+		self.$overlay.css({ backgroundColor : record.color || '', width:self.$icon.width(), height:self.$icon.height(), opacity:0.4 });
+	};
+	MapItem.prototype.destroy = function() {
+		this.$item.remove();
+	}
+	
+	var ListItem = function(record, $container, app) {
+		var self = this;
+		var tmpl = $('#sensorlistitem_template').html();
+		self.$item = $(tmpl).appendTo($container);
+		self.canDrag = true;
+		self.$placeholder;
+		self.dragging = new MouseDragging(self.$item, {
+			dragstart : function(o) {
+				var $img = self.$item.find('.icon_image').eq(0);
+				self.$placeholder = $img.clone().appendTo('body').css({position:'absolute', marginLeft:-$img.width()/2, marginTop:-$img.height()/2});
+			},
+			dragmove : function(o) {
+				self.$placeholder.css({ left:o.currentPosition.x, top:o.currentPosition.y });
+			},
+			dragend : function(o) {
+				self.$placeholder.remove();
+				app.dropListItemOntoScreen(record.id, o.releasePosition);
+			}
+		});
+	};
+	ListItem.prototype.setDraggingEnabled = function(canDrag) {
+		this.canDrag = false;
+		this.$item.css({opacity:canDrag ? 1 : 0.4});
+		this.dragging.setEnabled(canDrag);
+	}
+	ListItem.prototype.refreshFromRecord = function(record) {
+		this.$item.find('.icon_label').text(record.name);
+		this.$item.find('.icon_image').attr('src', record.imgurl);
+	}
+	
+	var App = function() {
 		this.data = null;
 		this.$viewport = $('#viewport');
 		this.$mapcontainer = $('#mapcontainer');
@@ -103,11 +184,19 @@
 		this.$sensorlist = $('#sensorlist');
 		this.$mapname_input = $('#mapname_input');
 		this.$status = $('#status');
-		this.initCommandBar();
-		this.icons = {};
+		this.mappedItems = {};
+		this.listedItems = {};
+		this.recordLookupById = {};
 		this.$viewport.find('*').disableSelection();
+		this.initCommandBar();
+		
+		var self = this;
+		setInterval(function() {
+			self.load();
+		}, 3000);
 	};
-	FloorModel.prototype.initCommandBar = function() {
+	// UI
+	App.prototype.initCommandBar = function() {
 		var self = this;
 		self.$sensorlisttoggle.bind('click', function(e) { self.toggleSensorList(); });
 		self.$mapname_input.bind('keydown', function(e) {
@@ -118,81 +207,80 @@
 		});
 		
 	}
-	FloorModel.prototype.initIconListItem = function($item, record) {
-		var self = this;
-		var $placeholder;
-		var dragging = new MouseDragging($item, {
-			dragstart : function(o) {
-				$placeholder = $item.find('.icon_image').clone().appendTo('body').css({position:'absolute', marginLeft:-$item.width()/2, marginTop:-$item.height()/2});
-			},
-			dragmove : function(o) {
-				$placeholder.css({ left:o.currentPosition.x, top:o.currentPosition.y });
-			},
-			dragend : function(o) {
-				$placeholder.remove();
-				var dropPoint = self.globalToLocal(o.releasePosition);
-				record.x = dropPoint.x;
-				record.y = dropPoint.y;
-				self.updateIcon(record);
-				self.save();
-			}
-		});
-	}
-	FloorModel.prototype.initIcon = function(record) {
-		var self = this;
-		var $icon = self.icons[record.name] = $("<img style='position:absolute;'/>");
-		$icon.appendTo(self.$mapcontainer);
-		$icon.attr('src', record.imgurl);
-		$icon.css({ marginLeft:-$icon.width()/2, marginTop:-$icon.height()/2 });
-		var start;
-		var current;
-		var dragging = new MouseDragging($icon, {
-			dragstart : function(o) {
-				start = Point.fromCss($icon.position());
-			},
-			dragmove : function(o) {
-				current = start.add(o.dragVector);
-				$icon.css({ left:current.x, top:current.y });
-			},
-			dragend : function(o) {
-				record.x = current.x;
-				record.y = current.y;
-				self.save();
-			}
-		})
-	}
-	FloorModel.prototype.updateIcon = function(record) {
-		var self = this;
-		if (this.icons[record.name] === undefined) {
-			self.initIcon(record);
+	App.prototype.dropListItemOntoScreen = function(recordId, globalPoint) {
+		if (this.__hittestOnMap(globalPoint)) {
+			return;
 		}
-		this.icons[record.name].css({ left:record.x, top:record.y });
-	}
-	FloorModel.prototype.globalToLocal = function(p) {
+		var position = this.globalToLocal(globalPoint);
+		this.setRecordXY(recordId, position.x, position.y);
+		this.mappedItems[recordId] = new MapItem(recordId, this.$mapcontainer, this);
+		this.mappedItems[recordId].refreshFromRecord(this.getRecord(recordId));
+		this.listedItems[recordId].setDraggingEnabled(false);
+	};
+	App.prototype.globalToLocal = function(p) {
 		var offset = Point.fromCss(this.$mapcontainer.offset());
 		var scroll = new Point(this.$mapcontainer.scrollTop(), this.$mapcontainer.scrollLeft());
 		var newp = p.subtract(offset).add(scroll);
 		return newp;
 	}
-	FloorModel.prototype.toggleSensorList = function() {
+	App.prototype.toggleSensorList = function() {
 		this.$sensorlist.toggle();
 	};
-	FloorModel.prototype.update = function(data) {
-		var oldData = this.data;
-		this.data = data;
-		this.$mapname_input.val(data.name);
-		this.$mapimage.attr('src', data.imgurl);
-		this.$sensorlist.empty();
+	App.prototype.dropMapItemOntoScreen = function(recordId, position) {
+		// If release outside of map or release over listitem, then remove, otherwise re-add
 		var self = this;
-		$.each(this.data.sensors, function(i, record) {
-			var tmpl = $('#sensorlistitem_template').html();
-			var $item = $(tmpl).appendTo(self.$sensorlist);
-			$item.find('.icon_label').text(record.name);
-			$item.find('.icon_image').attr('src', record.imgurl);
-			self.initIconListItem($item, record);
-		});
+		if (self.__hittestOnMap(position)) {
+			self.mappedItems[recordId].destroy();
+			delete self.mappedItems[recordId];
+			self.listedItems[recordId].setDraggingEnabled(true);
+		} else {
+			var localPoint = self.globalToLocal(position);
+			self.mappedItems[recordId].appendTo(self.$mapcontainer).css({ left:localPoint.x, top:localPoint.y });
+			self.setRecordXY(recordId, localPoint.x, localPoint.y);
+		}
 	}
-	FloorModel.prototype.load = function(continuation) {
+	App.prototype.__hittestOnMap = function(position) {
+		var self = this;
+		return self.__hittest(position, self.$sensorlist) == true || self.__hittest(position, self.$viewport) == false;
+	}
+	App.prototype.__hittest = function(p, $element) {
+		var origin = Point.fromCss($element.offset());
+		var corner = new Point(origin.x + $element.width(), origin.y + $element.height());
+		return origin.x <= p.x && p.x <= corner.x && origin.y <= p.y && p.y <= corner.y;
+	}
+	// Data
+	App.prototype.refreshEverything = function(data) {
+		var self = this;
+		self.data = data;
+		self.$mapname_input.val(data.name);
+		self.$mapimage.attr('src', data.imgurl);
+		$.each(self.data.sensors, function(i, record) {
+			self.recordLookupById[record.id] = record;
+		});
+		$.each(self.data.sensors, function(i, record) {
+			// If device id is unregistered, add it to the list
+			if (self.listedItems[record.id] === undefined) {
+				self.listedItems[record.id] = new ListItem(record, self.$sensorlist, self);
+			}
+			// Refresh device in the list
+			self.listedItems[record.id].refreshFromRecord(record);
+			
+			// If device was mapped, refresh the map item
+			if (self.mappedItems[record.id]) {
+				self.mappedItems[record.id].refreshFromRecord(record);
+			}
+		});
+	};
+	App.prototype.setRecordXY = function(recordId, x, y) {
+		var record = this.getRecord(recordId);
+		record.x = x;
+		record.y = y;
+		this.save();
+	}
+	App.prototype.getRecord = function(id) {
+		return this.recordLookupById[id];
+	}
+	App.prototype.load = function(continuation) {
 		var self = this;
 		$.ajax({
 			url : 'floorplan.json',
@@ -202,7 +290,7 @@
 			success : function(responseData, textStatus, xhr) {
 				self.$status.text('Loaded');
 				setTimeout(function() { self.$status.fadeOut(); }, 300);
-				self.update(responseData);
+				self.refreshEverything(responseData);
 				continuation && continuation(responseData);
 			},
 			error : function(a,b,c) {
@@ -212,7 +300,7 @@
 		});
 		self.$status.text('Loading...').fadeIn();
 	};
-	FloorModel.prototype.save = function(continuation) {
+	App.prototype.save = function(continuation) {
 		var self = this;
 		self.$status.text('Saving...').fadeIn();
 		$.ajax({
@@ -228,8 +316,7 @@
 		});
 	};
 	$(window).load(function() {
-		var floorModel = new FloorModel();
-		floorModel.load();
+		var app = new App();
 	});
 	</script>
 </head>
