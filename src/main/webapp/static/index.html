@@ -166,14 +166,16 @@
 	MapItem.prototype.toggleBalloon = function() {
 		var self = this;
 		var notes = self.app.getRecord(self.recordId).notes;
-		if (this.$balloon == null && notes && notes.length > 0) {
+		var balloonHeight = 50;
+		var balloonWidth = 140;
+		if (this.$balloon !== null) {
+			this.$balloon.remove();
+			this.$balloon = null;
+		} else if (notes && notes.length > 0) {
 			this.$balloon = $("<div></div>").addClass('triangle-isosceles');
 			this.$balloon.html(notes);
 			this.$balloon.appendTo(this.$item);
-			this.$balloon.css({ position:'absolute', top:-this.$balloon.outerHeight() - 25, left:-this.$balloon.outerWidth()/2-25, minWidth:180 });
-		} else {
-			this.$balloon.remove();
-			this.$balloon = null;
+			this.$balloon.css({ position:'absolute', top:-balloonHeight-56, left:-40, height:balloonHeight, width:balloonWidth });
 		}
 	}
 	MapItem.prototype.refreshFromRecord = function(record) {
@@ -185,9 +187,8 @@
 			marginLeft:-self.$icon.width()/2, marginTop:-self.$icon.height()/2
 		});
 		self.$overlay.css({ backgroundColor : record.color || '', width:self.$icon.width(), height:self.$icon.height(), opacity:0.4 });
-		if (self.$balloon) {
+		if (self.$balloon && record.notes) {
 			self.$balloon.html(record.notes);
-			this.$balloon.css({ position:'absolute', top:-this.$balloon.outerHeight() - 25, left:-this.$balloon.outerWidth()/2-25, minWidth:180 });
 		}
 	};
 	MapItem.prototype.destroy = function() {
