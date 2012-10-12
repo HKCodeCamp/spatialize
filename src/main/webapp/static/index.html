@@ -185,6 +185,9 @@
 			marginLeft:-self.$icon.width()/2, marginTop:-self.$icon.height()/2
 		});
 		self.$overlay.css({ backgroundColor : record.color || '', width:self.$icon.width(), height:self.$icon.height(), opacity:0.4 });
+		if (self.$balloon) {
+			self.$balloon.html(record.notes);
+		}
 	};
 	MapItem.prototype.destroy = function() {
 		this.$item.remove();
