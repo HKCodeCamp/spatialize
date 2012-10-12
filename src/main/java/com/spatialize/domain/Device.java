@@ -6,6 +6,8 @@ public class Device {
 	
 	public String imgurl;
 	
+	public String color;
+	
 	public String name;
 	
 	public String parameters;
