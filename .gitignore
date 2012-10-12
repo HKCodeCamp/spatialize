@@ -1,1 +1,4 @@
-spatialize.tmproj
+.classpath
+.project
+.settings/
+target/
