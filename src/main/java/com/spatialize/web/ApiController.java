@@ -46,17 +46,25 @@ public class ApiController {
 		for (Tag tag: deviceSvc.getAvailableSensors()) {
 			Device d = new Device();
 			d.id = tag.id;
+			d.name = tag.id;
+			d.notes = "";
+			d.parameters = "";
+			d.color = "green";
 			
 			d.imgurl = "/spatialize/resources/images";
 			
 			if (hasAttribute(tag, "humidity")) {
 				d.imgurl += "/temperature-humidity-symbol.png";
+				d.notes = "Humidity: " + tag.attributes.get("humidity") + "%";
+				d.notes += "<br/>Temperature: " + tag.attributes.get("temp") + "C";
 				
 			} else if (hasAttribute(tag, "temp")) {
 				d.imgurl += "/temperature-symbol.png";
+				d.notes = "Temperature: " + tag.attributes.get("temp") + "C";
 				
 			} else if (hasAttribute(tag, "dooropen")) {
 				d.imgurl += "/door-symbol.png";
+				d.notes = "Door open?: " + tag.attributes.get("dooropen");
 				
 				boolean doorOpen = Boolean.valueOf((String)tag.attributes.get("dooropen"));
 				if (doorOpen)
@@ -66,14 +74,18 @@ public class ApiController {
 				
 			} else if (hasAttribute(tag, "fluid")) {
 				d.imgurl += "/fluid-symbol.png";
+				d.notes = "Fluid detected: " + tag.attributes.get("fluid");
+				
+				boolean fluid = Boolean.valueOf((String)tag.attributes.get("fluid"));
+				if (fluid)
+					d.color = "red";
+				else
+					d.color = "green";
 				
 			} else {
 				//d.imgurl += "/unknown.png";
 				continue;
 			}
-			d.name = tag.id;
-			d.notes = "";
-			d.parameters = "";
 			
 			deviceList.add(d);
 		}
