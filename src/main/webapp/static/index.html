@@ -165,9 +165,10 @@
 	};
 	MapItem.prototype.toggleBalloon = function() {
 		var self = this;
-		if (this.$balloon == null) {
+		var notes = self.app.getRecord(self.recordId).notes;
+		if (this.$balloon == null && notes && notes.length > 0) {
 			this.$balloon = $("<div></div>").addClass('triangle-isosceles');
-			this.$balloon.html(self.app.getRecord(self.recordId).notes);
+			this.$balloon.html(notes);
 			this.$balloon.appendTo(this.$item);
 			this.$balloon.css({ position:'absolute', top:-this.$balloon.outerHeight() - 25, left:-this.$balloon.outerWidth()/2-25 });
 		} else {
