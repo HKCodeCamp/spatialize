@@ -27,9 +27,14 @@ public class ApiController {
 	@RequestMapping(value = "/floorplan.json", method = RequestMethod.GET, produces="application/json")
 	public @ResponseBody FloorPlan getFloorPlan() {
 		FloorPlan fp = new FloorPlan();
-		fp.imgurl="http://www.google.com";
+		fp.imgurl="/spatialize/resources/images/section1.png";
 		fp.sensors = createDevices();
 		return fp;
+	}
+	
+	@RequestMapping(value = "/floorplan.json", method = RequestMethod.POST, produces="application/json")
+	public @ResponseBody Object saveFloorPlan() {
+		return new Object();
 	}
 	
 	private Collection<Device> createDevices() {
@@ -37,8 +42,26 @@ public class ApiController {
 		for (Tag tag: deviceSvc.getAvailableSensors()) {
 			Device d = new Device();
 			d.id = tag.id;
-			d.imgurl = "/spatialize/resources/images/temperature-symbol.png";
-			d.name = null;
+			
+			d.imgurl = "/spatialize/resources/images";
+			
+			if (tag.attributes.containsKey("humidity")) {
+				d.imgurl += "/temperature-humidity-symbol.png";
+				
+			} else if (tag.attributes.containsKey("temp")) {
+				d.imgurl += "/temperature-symbol.png";
+			} else if (tag.attributes.containsKey("door")) {
+				d.imgurl += "/door-symbol.png";
+				
+			} else if (tag.attributes.containsKey("fluid")
+					&& "null".equalsIgnoreCase((String) tag.attributes
+							.get("fluid")) == false) {
+				d.imgurl += "/fluid-symbol.png";
+
+			} else {
+				d.imgurl += "/unknown.png";
+			}
+			d.name = tag.id;
 			d.notes = "";
 			d.parameters = "";
 			
