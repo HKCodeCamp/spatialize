@@ -10,7 +10,8 @@
 			"parameter":"wifisensortype",
 			"x":null,
 			"y":null,
-			"notes":""
+			"notes":"Humidity=60%<br/>Temperature=20%",
+			"color":"orange"
 		},
 		{
 			"id":"2",
@@ -19,7 +20,8 @@
 			"parameter":"wifisensortype",
 			"x":null,
 			"y":null,
-			"notes":""
+			"notes":"Humidity=60%<br/>Temperature=20%",
+			"color":"orange"
 		},
 		{
 			"id":"3",
@@ -28,7 +30,8 @@
 			"parameter":"wifisensortype",
 			"x":null,
 			"y":null,
-			"notes":""
+			"notes":"Humidity=60%<br/>Temperature=20%",
+			"color":"orange"
 		},
 		{
 			"id":"4",
@@ -37,7 +40,8 @@
 			"parameter":"wifisensortype",
 			"x":null,
 			"y":null,
-			"notes":""
+			"notes":"Humidity=60%<br/>Temperature=20%",
+			"color":"orange"
 		},
 		{
 			"id":"5",
@@ -46,7 +50,8 @@
 			"parameter":"wifisensortype",
 			"x":null,
 			"y":null,
-			"notes":""
+			"notes":"Humidity=60%<br/>Temperature=20%",
+			"color":"orange"
 		},
 		{
 			"id":"6",
@@ -55,7 +60,8 @@
 			"parameter":"wifisensortype",
 			"x":null,
 			"y":null,
-			"notes":""
+			"notes":"Humidity=60%<br/>Temperature=20%",
+			"color":"orange"
 		}
 	]
 }
