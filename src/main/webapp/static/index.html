@@ -170,7 +170,7 @@
 			this.$balloon = $("<div></div>").addClass('triangle-isosceles');
 			this.$balloon.html(notes);
 			this.$balloon.appendTo(this.$item);
-			this.$balloon.css({ position:'absolute', top:-this.$balloon.outerHeight() - 25, left:-this.$balloon.outerWidth()/2-25 });
+			this.$balloon.css({ position:'absolute', top:-this.$balloon.outerHeight() - 25, left:-this.$balloon.outerWidth()/2-25, minWidth:180 });
 		} else {
 			this.$balloon.remove();
 			this.$balloon = null;
