@@ -43,6 +43,11 @@
 		(DONE) prevent dragging from list onto map offscreen
 		(DONE) tap to show balloon
 		multi-touch event handling
+		
+		sync two simultaneous drag/dragoff
+		balloon on different adorner layer
+		more configurable balloon
+		need to use my other event-handling library, distinguish between tap, startdrag, dragend, etc.
 	*/
 	var Point = function(x,y,z) {
 		this.x = x; this.y = y; this.z = z == undefined ? 0 : z;
@@ -128,8 +133,8 @@
 		return false;
 	};
 	MouseDragging.prototype.mouseup = function(e) {
-		this.releasePosition = Point.fromEvent(this.lastMoveEvent);
 		if (this.isDragging) {
+			this.releasePosition = Point.fromEvent(this.lastMoveEvent);
 			this.send('dragend');
 		}
 		this.isDragging = false;
@@ -202,7 +207,7 @@
 			this.$balloon = $("<div></div>").addClass('triangle-isosceles');
 			this.$balloon.html(notes);
 			this.$balloon.appendTo(this.$item);
-			this.$balloon.css({ position:'absolute', top:-balloonHeight-56, left:-40, height:balloonHeight, width:balloonWidth });
+			this.$balloon.css({ position:'absolute', top:-balloonHeight-56, left:-55, height:balloonHeight, width:balloonWidth });
 		}
 	}
 	MapItem.prototype.refreshFromRecord = function(record) {
