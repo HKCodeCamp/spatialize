@@ -163,6 +163,7 @@
 		var current;
 		var dragging = new MouseDragging(self.$overlay, {
 			dragstart : function(o) {
+				app.pauseLoading();
 				start = Point.fromCss(self.$item.position());
 				self.$item.appendTo('body');
 				if (self.$balloon) {
@@ -177,6 +178,7 @@
 			dragend : function(o) {
 				app.dropListItemOntoScreen(recordId, o.releasePosition);
 				self.destroy();
+				setTimeout(function() { app.load(); }, 1000);
 			}
 		});
 		if (this.SUPPORTS_TOUCH) {
@@ -232,6 +234,7 @@
 		self.$placeholder;
 		self.dragging = new MouseDragging(self.$item, {
 			dragstart : function(o) {
+				app.pauseLoading();
 				var $img = self.$item.find('.icon_image').eq(0);
 				self.$placeholder = $img.clone().appendTo('body').css({position:'absolute', marginLeft:-$img.width()/2, marginTop:-$img.height()/2});
 			},
@@ -241,6 +244,7 @@
 			dragend : function(o) {
 				self.$placeholder.remove();
 				app.dropListItemOntoScreen(record.id, o.releasePosition);
+				setTimeout(function() { app.load(); }, 1000);
 			}
 		});
 	};
@@ -361,6 +365,9 @@
 	App.prototype.getRecord = function(id) {
 		return this.recordLookupById[id];
 	}
+	App.prototype.pauseLoading = function() {
+		clearTimeout(this.loadId);
+	}
 	App.prototype.load = function(continuation) {
 		var self = this;
 		$.ajax({
@@ -378,7 +385,7 @@
 				self.$status.text('Connection Error');
 			},
 			complete : function() {
-				setTimeout(function() { self.load(); }, 3000);
+				self.loadId = setTimeout(function() { self.load(); }, 3000);
 			}
 		});
 		self.$status.text('Loading...').fadeIn();
