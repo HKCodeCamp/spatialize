@@ -2,7 +2,6 @@ package com.spatialize.web;
 
 import hk.com.quantum.zonemgr.response.model.Tag;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -11,8 +10,6 @@ import java.util.Set;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +44,7 @@ public class ApiController {
 				singleFloorPlan.sensors = createDevices();
 			}
 		}
+		updateSensor(singleFloorPlan);
 		if(log.isDebugEnabled()) {
 			ObjectMapper mapper = new ObjectMapper();
 			try {
@@ -59,6 +57,16 @@ public class ApiController {
 		return singleFloorPlan;
 	}
 	
+	private void updateSensor(FloorPlan floorPlan) {
+		for (Tag tag: deviceSvc.getAvailableSensors()) {
+			for (Device d: floorPlan.sensors) {
+				if (d.id != null && d.id.equals(tag.id)){
+					populateDeviceFromTag(d, tag);
+				}
+			}
+		}
+	}
+
 	@RequestMapping(value = "/floorplan.json", method = RequestMethod.POST, produces="application/json")
 	public @ResponseBody Object saveFloorPlan(HttpServletRequest req,
 			@RequestParam String jsonstring) {
@@ -91,45 +99,51 @@ public class ApiController {
 			d.parameters = "";
 			d.color = "green";
 			
-			d.imgurl = "/spatialize/resources/images";
+			boolean populated = populateDeviceFromTag(d, tag);
 			
-			if (hasAttribute(tag, "humidity")) {
-				d.imgurl += "/temperature-humidity-symbol.png";
-				d.notes = "Humidity: " + tag.attributes.get("humidity") + "%";
-				d.notes += "<br/>Temperature: " + tag.attributes.get("temp") + "C";
-				
-			} else if (hasAttribute(tag, "temp")) {
-				d.imgurl += "/temperature-symbol.png";
-				d.notes = "Temperature: " + tag.attributes.get("temp") + "C";
-				
-			} else if (hasAttribute(tag, "dooropen")) {
-				d.imgurl += "/door-symbol.png";
-				d.notes = "Door open?: " + tag.attributes.get("dooropen");
-				
-				boolean doorOpen = Boolean.valueOf((String)tag.attributes.get("dooropen"));
-				if (doorOpen)
-					d.color = "red";
-				else
-					d.color = "green";
-				
-			} else if (hasAttribute(tag, "fluid")) {
-				d.imgurl += "/fluid-symbol.png";
-				d.notes = "Fluid detected: " + tag.attributes.get("fluid");
-				
-				boolean fluid = Boolean.valueOf((String)tag.attributes.get("fluid"));
-				if (fluid)
-					d.color = "red";
-				else
-					d.color = "green";
-				
-			} else {
-				//d.imgurl += "/unknown.png";
-				continue;
-			}
-			
-			deviceList.add(d);
+			if (populated == true)
+				deviceList.add(d);
 		}
 		return deviceList;
+	}
+	
+	private boolean populateDeviceFromTag(Device d, Tag tag) {
+		d.imgurl = "/spatialize/resources/images";
+		
+		if (hasAttribute(tag, "humidity")) {
+			d.imgurl += "/temperature-humidity-symbol.png";
+			d.notes = "Humidity: " + tag.attributes.get("humidity") + "%";
+			d.notes += "<br/>Temperature: " + tag.attributes.get("temp") + "C";
+			
+		} else if (hasAttribute(tag, "temp")) {
+			d.imgurl += "/temperature-symbol.png";
+			d.notes = "Temperature: " + tag.attributes.get("temp") + "C";
+			
+		} else if (hasAttribute(tag, "dooropen")) {
+			d.imgurl += "/door-symbol.png";
+			d.notes = "Door open?: " + tag.attributes.get("dooropen");
+			
+			boolean doorOpen = Boolean.valueOf((String)tag.attributes.get("dooropen"));
+			if (doorOpen)
+				d.color = "red";
+			else
+				d.color = "green";
+			
+		} else if (hasAttribute(tag, "fluid")) {
+			d.imgurl += "/fluid-symbol.png";
+			d.notes = "Fluid detected: " + tag.attributes.get("fluid");
+			
+			boolean fluid = Boolean.valueOf((String)tag.attributes.get("fluid"));
+			if (fluid)
+				d.color = "red";
+			else
+				d.color = "green";
+			
+		} else {
+			//d.imgurl += "/unknown.png";
+			return false;
+		}
+		return true;
 	}
 	
 	private boolean hasAttribute(Tag tag, String attr) {
