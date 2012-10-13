@@ -41,7 +41,7 @@
 		(DONE) disable list item when instantiated
 		(DONE) delete by dragging outside or onto sensor list
 		(DONE) prevent dragging from list onto map offscreen
-		tap to show balloon
+		(DONE) tap to show balloon
 		multi-touch event handling
 	*/
 	var Point = function(x,y,z) {
@@ -150,6 +150,9 @@
 			dragstart : function(o) {
 				start = Point.fromCss(self.$item.position());
 				self.$item.appendTo('body');
+				if (self.$balloon) {
+					self.toggleBalloon();
+				}
 				app.detachMapItem(recordId);
 			},
 			dragmove : function(o) {
@@ -166,12 +169,15 @@
 	MapItem.prototype.toggleBalloon = function() {
 		var self = this;
 		var notes = self.app.getRecord(self.recordId).notes;
+		if (notes == null || notes.length == 0) {
+			notes = "(Empty description)";
+		}
 		var balloonHeight = 50;
 		var balloonWidth = 140;
 		if (this.$balloon !== null) {
 			this.$balloon.remove();
 			this.$balloon = null;
-		} else if (notes && notes.length > 0) {
+		} else {
 			this.$balloon = $("<div></div>").addClass('triangle-isosceles');
 			this.$balloon.html(notes);
 			this.$balloon.appendTo(this.$item);
@@ -187,8 +193,12 @@
 			marginLeft:-self.$icon.width()/2, marginTop:-self.$icon.height()/2
 		});
 		self.$overlay.css({ backgroundColor : record.color || '', width:self.$icon.width(), height:self.$icon.height(), opacity:0.4 });
-		if (self.$balloon && record.notes) {
-			self.$balloon.html(record.notes);
+		if (self.$balloon) {
+			var notes = self.app.getRecord(self.recordId).notes;
+			if (notes == null || notes.length == 0) {
+				notes = "(Empty description)";
+			}
+			self.$balloon.html(notes);
 		}
 	};
 	MapItem.prototype.destroy = function() {
@@ -296,8 +306,12 @@
 	App.prototype.refreshEverything = function(data) {
 		var self = this;
 		self.data = data;
-		self.$mapname_input.val(data.name);
-		self.$mapimage.attr('src', data.imgurl);
+		if (self.$mapname_input.is(':focus') == false) {
+			self.$mapname_input.val(data.name);
+		}
+		if (self.$mapimage.attr('src') != data.imgurl) {
+			self.$mapimage.attr('src', data.imgurl);
+		}
 		$.each(self.data.sensors, function(i, record) {
 			self.recordLookupById[record.id] = record;
 		});
