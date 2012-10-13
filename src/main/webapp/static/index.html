@@ -355,7 +355,8 @@
 				if (record.x !== null && self.mappedItems[record.id] === undefined) {
 					self.addMapItem(record.id);
 				// If record does not have coordinate but is mapped, remove it from map
-				} else if (self.mappedItems[record.id] !== undefined && record.x == null) {
+				} else if (self.mappedItems[record.id] && record.x == null) {
+					self.mappedItems[record.id].destroy();
 					self.detachMapItem(record.id);
 				}
 				// Refresh the map item
