@@ -168,13 +168,13 @@
 		var current;
 		var dragging = new MouseDragging(self.$overlay, {
 			dragstart : function(o) {
-				app.pauseLoading();
 				start = Point.fromCss(self.$item.position());
 				self.$item.appendTo('body');
 				if (self.$balloon) {
 					self.toggleBalloon();
 				}
 				app.detachMapItem(recordId);
+				app.selectedRecordId = recordId;
 			},
 			dragmove : function(o) {
 				current = start.add(o.dragVector);
@@ -182,8 +182,8 @@
 			},
 			dragend : function(o) {
 				app.dropListItemOntoScreen(recordId, o.releasePosition);
+				app.selectedRecordId = null;
 				self.destroy();
-				setTimeout(function() { app.load(); }, 1000);
 			}
 		});
 		if (this.SUPPORTS_TOUCH) {
@@ -239,7 +239,6 @@
 		self.$placeholder;
 		self.dragging = new MouseDragging(self.$item, {
 			dragstart : function(o) {
-				app.pauseLoading();
 				var $img = self.$item.find('.icon_image').eq(0);
 				self.$placeholder = $img.clone().appendTo('body').css({position:'absolute', marginLeft:-$img.width()/2, marginTop:-$img.height()/2});
 			},
@@ -249,7 +248,6 @@
 			dragend : function(o) {
 				self.$placeholder.remove();
 				app.dropListItemOntoScreen(record.id, o.releasePosition);
-				setTimeout(function() { app.load(); }, 1000);
 			}
 		});
 	};
@@ -351,13 +349,15 @@
 			// Refresh device in the list
 			self.listedItems[record.id].refreshFromRecord(record);
 			
-			// If the record shows coordinate, but isn't mapped, add it to the map
-			if (record.x !== null && self.mappedItems[record.id] === undefined) {
-				self.addMapItem(record.id);
-			}
-			// Refresh the map item
-			if (self.mappedItems[record.id]) {
-				self.mappedItems[record.id].refreshFromRecord(record);
+			if (self.selectedRecordId != record.id) {
+				// If the record shows coordinate, but isn't mapped, add it to the map
+				if (record.x !== null && self.mappedItems[record.id] === undefined) {
+					self.addMapItem(record.id);
+				}
+				// Refresh the map item
+				if (self.mappedItems[record.id]) {
+					self.mappedItems[record.id].refreshFromRecord(record);
+				}
 			}
 		});
 	};
@@ -369,9 +369,6 @@
 	}
 	App.prototype.getRecord = function(id) {
 		return this.recordLookupById[id];
-	}
-	App.prototype.pauseLoading = function() {
-		clearTimeout(this.loadId);
 	}
 	App.prototype.load = function(continuation) {
 		var self = this;
