@@ -2,17 +2,24 @@ package com.spatialize.web;
 
 import hk.com.quantum.zonemgr.response.model.Tag;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.spatialize.domain.Device;
@@ -27,18 +34,51 @@ public class ApiController {
 	
 	@Resource
 	private DeviceServices deviceSvc;
+	
+	private static Object floorPlanLock = new Object();
+	private static FloorPlan singleFloorPlan;
 
 	@RequestMapping(value = "/floorplan.json", method = RequestMethod.GET, produces="application/json")
 	public @ResponseBody FloorPlan getFloorPlan() {
-		FloorPlan fp = new FloorPlan();
-		fp.imgurl="/spatialize/resources/images/section1.png";
-		fp.sensors = createDevices();
-		return fp;
+		synchronized(floorPlanLock) {
+			if (singleFloorPlan == null) {
+				singleFloorPlan = new FloorPlan();
+				singleFloorPlan.imgurl="/spatialize/resources/images/floorplan1.jpg";
+				singleFloorPlan.sensors = createDevices();
+			}
+		}
+		if(log.isDebugEnabled()) {
+			ObjectMapper mapper = new ObjectMapper();
+			try {
+				String json = mapper.writeValueAsString(singleFloorPlan);
+				log.debug("Write json: " + json);
+			} catch (Exception e) {
+				log.error("Error deserializing floor plan to json string.", e);
+			}
+		}
+		return singleFloorPlan;
 	}
 	
 	@RequestMapping(value = "/floorplan.json", method = RequestMethod.POST, produces="application/json")
-	public @ResponseBody Object saveFloorPlan() {
-		return new Object();
+	public @ResponseBody Object saveFloorPlan(HttpServletRequest req,
+			@RequestParam String jsonstring) {
+		log.debug("Posting: " + jsonstring);
+		Set<String> keySet = req.getParameterMap().keySet();
+		for(String key: keySet) {
+			log.debug(key + ":" + req.getParameter(key));
+		}
+		ObjectMapper mapper = new ObjectMapper();
+		try {
+			FloorPlan fp = mapper.readValue(jsonstring, FloorPlan.class);
+			log.debug("Floor Plan Serialized: " + fp);
+			synchronized(floorPlanLock) {
+				singleFloorPlan = fp;
+			}
+			return fp;
+		} catch (Exception e) {
+			log.error("Error Parsing Post Json String: '{}'", new Object[] { jsonstring }, e);
+			return null;
+		} 
 	}
 	
 	private Collection<Device> createDevices() {
