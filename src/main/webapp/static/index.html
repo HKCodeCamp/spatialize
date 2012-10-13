@@ -267,7 +267,6 @@
 		this.$viewport = $('#viewport');
 		this.$mapcontainer = $('#mapcontainer');
 		this.$mapimage = $('#mapimage');
-		this.$sensorlisttoggle = $('#sensorlist_toggle');
 		this.$sensorlist = $('#sensorlist');
 		this.$mapname_input = $('#mapname_input');
 		this.$status = $('#status');
@@ -283,7 +282,6 @@
 	// UI
 	App.prototype.initCommandBar = function() {
 		var self = this;
-		self.$sensorlisttoggle.bind('click', function(e) { self.toggleSensorList(); });
 		self.$mapname_input.bind('keydown', function(e) {
 			if ((e.keyCode == 192 || e.keyCode == 13) && self.data.name != self.$mapname_input.val()) {
 				self.data.name = self.$mapname_input.val();
@@ -312,9 +310,6 @@
 		var newp = p.subtract(offset).add(scroll);
 		return newp;
 	}
-	App.prototype.toggleSensorList = function() {
-		this.$sensorlist.toggle();
-	};
 	App.prototype.detachMapItem = function(recordId) {
 		var self = this;
 		delete self.mappedItems[recordId];
@@ -418,22 +413,25 @@
 	$(window).load(function() {
 		var url = window.location.hash == '#debug' ? 'floorplan.json' : '/spatialize/api/floorplan.json';
 		var app = new App(url);
+		$(window).resize(function() {
+			var $viewport = $('#viewport');
+			$viewport.css({height:$(window).height() - $viewport.offset().top - 20});
+		}).resize();
 	});
 	</script>
 </head>
-<body style=''>
+<body style='margin:10px;'>
 	<div id='main' style='position:relative; margin-left:auto; margin-right:auto; width:768px;'>
-		<div id='commandbar' style='height:20px; margin:8px 0 8px 0'>
+		<div id='commandbar' style='height:20px; margin:8px 0 8px 10px'>
 			<input id='mapname_input' style='float:left; width:240px;'/>
 			<div id='status' style='float:left; margin-left:8px; background:grey; color:white; display:none;'></div>
-			<button id='sensorlist_toggle' style='float:right'>Items</button>
 		</div>
-		<div id='viewport' style='position:relative; border:1px solid black; width:768px; height:400px; overflow:scroll;'>
+		<div id='viewport' style='position:relative; border:1px solid black; width:608px; margin-left:10; height:400px; overflow:scroll;'>
 			<div id='mapcontainer' style='position:relative;'>
 				<img id='mapimage'></img>
 			</div>
 		</div>
-		<div id='sensorlist' style='width:150px; height:300px; position:absolute; left:600px; top:30px; -webkit-box-shadow:1px 1px 5px; border-radius:8px; border:1px solid #eee; background:white; overflow:scroll;'>
+		<div id='sensorlist' style='width:140px; height:300px; position:absolute; left:630px; top:30px; background:white; overflow:scroll;'>
 		</div>
 	</div>
 	<script id='sensorlistitem_template' type='text/template'>
