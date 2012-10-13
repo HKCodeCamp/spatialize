@@ -11,7 +11,7 @@ http://www.springframework.org/schema/security/spring-security-3.1.xsd">
 		<security:intercept-url pattern="/" access="permitAll" />
 		<security:intercept-url pattern="/api/**" access="permitAll" />
 		<security:intercept-url pattern="/static/**" access="permitAll" />
-		<security:intercept-url pattern="/**" access="isAuthenticated()" />
+		<!-- <security:intercept-url pattern="/**" access="isAuthenticated()" /> -->
 	</security:http>
 	
 	<security:authentication-manager erase-credentials="true" >
