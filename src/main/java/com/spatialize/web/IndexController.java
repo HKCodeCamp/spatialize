@@ -10,6 +10,6 @@ public class IndexController {
 	
 	@RequestMapping(value = "/", method = RequestMethod.GET)
 	public String index(Model model) {
-		return "index";
+		return "redirect:/static/index.html";
 	}
 }
