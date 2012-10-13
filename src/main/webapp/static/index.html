@@ -291,10 +291,13 @@
 		}
 		var position = this.globalToLocal(globalPoint);
 		this.setRecordXY(recordId, position.x, position.y);
+		this.addMapItem(recordId);
+	};
+	App.prototype.addMapItem = function(recordId) {
 		this.mappedItems[recordId] = new MapItem(recordId, this.$mapcontainer, this);
 		this.mappedItems[recordId].refreshFromRecord(this.getRecord(recordId));
 		this.listedItems[recordId].setDraggingEnabled(false);
-	};
+	}
 	App.prototype.globalToLocal = function(p) {
 		var offset = Point.fromCss(this.$mapcontainer.offset());
 		var scroll = new Point(this.$mapcontainer.scrollTop(), this.$mapcontainer.scrollLeft());
@@ -339,7 +342,11 @@
 			// Refresh device in the list
 			self.listedItems[record.id].refreshFromRecord(record);
 			
-			// If device was mapped, refresh the map item
+			// If the record shows coordinate, but isn't mapped, add it to the map
+			if (record.x !== null && self.mappedItems[record.id] === undefined) {
+				self.addMapItem(record.id);
+			}
+			// Refresh the map item
 			if (self.mappedItems[record.id]) {
 				self.mappedItems[record.id].refreshFromRecord(record);
 			}
