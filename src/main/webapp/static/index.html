@@ -181,6 +181,7 @@
 				self.$item.css({ left:o.currentPosition.x, top:o.currentPosition.y });
 			},
 			dragend : function(o) {
+				app.selectedRecordId = null;
 				app.dropListItemOntoScreen(recordId, o.releasePosition);
 				self.destroy();
 			}
@@ -353,6 +354,9 @@
 				// If the record shows coordinate, but isn't mapped, add it to the map
 				if (record.x !== null && self.mappedItems[record.id] === undefined) {
 					self.addMapItem(record.id);
+				// If record does not have coordinate but is mapped, remove it from map
+				} else if (self.mappedItems[record.id] !== undefined && record.x == null) {
+					self.detachMapItem(record.id);
 				}
 				// Refresh the map item
 				if (self.mappedItems[record.id]) {
