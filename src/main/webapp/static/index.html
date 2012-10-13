@@ -182,7 +182,6 @@
 			},
 			dragend : function(o) {
 				app.dropListItemOntoScreen(recordId, o.releasePosition);
-				app.selectedRecordId = null;
 				self.destroy();
 			}
 		});
@@ -293,12 +292,13 @@
 		
 	}
 	App.prototype.dropListItemOntoScreen = function(recordId, globalPoint) {
-		if (this.__hittestOnMap(globalPoint)) {
-			return;
-		}
 		var position = this.globalToLocal(globalPoint);
-		this.setRecordXY(recordId, position.x, position.y);
-		this.addMapItem(recordId);
+		if (this.__hittestOnMap(globalPoint)) {
+			this.setRecordXY(recordId, null, null);
+		} else {
+			this.setRecordXY(recordId, position.x, position.y);
+			this.addMapItem(recordId);
+		}
 	};
 	App.prototype.addMapItem = function(recordId) {
 		this.mappedItems[recordId] = new MapItem(recordId, this.$mapcontainer, this);
@@ -404,6 +404,9 @@
 				continuation && continuation(responseData);
 				self.$status.text('Saved');
 				setTimeout(function() { self.$status.fadeOut(); }, 300);
+			},
+			complete : function() {
+				self.selectedRecordId = null;
 			}
 		});
 	};
