@@ -3,7 +3,6 @@
 	<meta name="viewport" content="width=768; user-scalable=no;">
 	<style>
 		body { margin:0; padding:0; font:12px Lucida Grande; }
-		
 		/* from http://nicolasgallagher.com/pure-css-speech-bubbles/demo/ */
 		.triangle-isosceles {
 			position:relative;
@@ -422,24 +421,25 @@
 	});
 	</script>
 </head>
-<body style='margin:10px;'>
+<body style='margin:10px; background:#444'>
 	<div id='main' style='position:relative; margin-left:auto; margin-right:auto; width:768px;'>
 		<div id='commandbar' style='height:20px; margin:8px 0 8px 10px'>
-			<input id='mapname_input' style='float:left; width:240px;'/>
-			<div id='status' style='float:left; margin-left:8px; background:grey; color:white; display:none;'></div>
+			<span style='float:left; font-size:20px; font-weight:bold; color:#eee; text-shadow: -1.5px -1.5px 2px #000;'>Floorplan:</span>
+			<input id='mapname_input' style='float:left; width:240px; border:none; background:#444; font-size:20px;  text-shadow: -1.5px -1.5px 2px #000; color:#eee; margin-top:-1px; margin-left:8px;'/>
+			<div id='status' style='float:right; padding:4px; color:white; display:none;'></div>
 		</div>
 		<div id='viewport' style='position:relative; border:1px solid black; width:608px; margin-left:10; height:400px; overflow:scroll;'>
 			<div id='mapcontainer' style='position:relative;'>
 				<img id='mapimage'></img>
 			</div>
 		</div>
-		<div id='sensorlist' style='width:140px; height:300px; position:absolute; left:630px; top:30px; background:white; overflow:scroll;'>
+		<div id='sensorlist' style='width:140px; height:300px; position:absolute; left:630px; top:30px; overflow:scroll;'>
 		</div>
 	</div>
 	<script id='sensorlistitem_template' type='text/template'>
 		<a class='icon_item' style='height:24px; width:300px;'>
 			<img class='icon_image'/>
-			<span class='icon_label'></span>
+			<span class='icon_label' style='color:white;'></span>
 		</a>
 	</script>
 </body>
