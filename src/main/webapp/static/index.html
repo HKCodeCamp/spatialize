@@ -114,6 +114,7 @@
 		var e = this.__convertEvent(e);
 		if (this.canDrag == false) { return; }
 		this.pressPosition = Point.fromEvent(e);
+		this.currentPosition = this.pressPosition.copy();
 		$(document).bind(this.MOVE_EV, $.proxy(this.mousemove, this));
 		$(document).one(this.END_EV, $.proxy(this.mouseup, this));
 		return false;
@@ -136,6 +137,9 @@
 		if (this.isDragging) {
 			this.releasePosition = Point.fromEvent(this.lastMoveEvent);
 			this.send('dragend');
+		}
+		if (this.isDragging == false) {
+			this.send('tap');
 		}
 		this.isDragging = false;
 		$(document).unbind(this.MOVE_EV, this.mousemove);
@@ -184,13 +188,11 @@
 				app.selectedRecordId = null;
 				app.dropListItemOntoScreen(recordId, o.releasePosition);
 				self.destroy();
+			},
+			tap : function() {
+				self.toggleBalloon();
 			}
 		});
-		if (this.SUPPORTS_TOUCH) {
-			self.$item.bind('tap', function() { self.toggleBalloon(); });
-		} else {
-			self.$item.bind('click', function() { self.toggleBalloon(); });
-		}
 	};
 	MapItem.prototype.toggleBalloon = function() {
 		var self = this;
